@@ -10,3 +10,23 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+map style alternatives:
+
+    // gray, white, cream
+    // L.tileLayer(
+    //   "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    //   {
+    //     attribution: "&copy; OpenStreetMap & CartoDB",
+    //     maxZoom: 20,
+    //   }
+    // ).addTo(map);
+
+    // black and white
+    // L.tileLayer(
+    //   "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png",
+    //   {
+    //     attribution: "&copy; OpenMapTiles & Stadia Maps",
+    //     maxZoom: 20,
+    //   }
+    // ).addTo(map);
