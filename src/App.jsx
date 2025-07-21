@@ -1,5 +1,5 @@
 import L, { featureGroup } from "leaflet";
-// import "./App.css";
+import "./App.css";
 import { useEffect, useRef, useState } from "react";
 import GPS from "./GPS";
 import { Fab } from "@mui/material";
@@ -41,6 +41,14 @@ function App() {
   };
   const [isGpsOn, setIsGpsOn] = useState(false);
   const mapRef = useRef(null); // <== This stores the map instance
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+
+  // useEffect(() => {
+  //   const handleResize = () => setIsMobile(window.innerWidth <= 480);
+  //   window.addEventListener("resize", handleResize);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, []);
+
   useEffect(() => {
     // map initialization
     const map = L.map("map", {
@@ -91,8 +99,22 @@ function App() {
       const lng = pos.coords.longitude;
       const accuracy = pos.coords.accuracy;
 
-      const marker = L.marker([lat, lng]);
-      const circle = L.circle([lat, lng], { radius: accuracy });
+      // Add blue dot marker
+      const marker = L.circleMarker([lat, lng], {
+        radius: 8,
+        color: "#FFFFFF",
+        weight: 2, // thinner = lower value
+        fillColor: "#2A93EE",
+        fillOpacity: 0.7,
+        className: "marker-glow",
+      }).addTo(map);
+      const circle = L.circle([lat, lng], {
+        radius: accuracy,
+        color: "transparent",
+        weight: 0,
+        fillColor: "#2a92ee62",
+        fillOpacity: 0.7,
+      });
 
       if (userCurrentLocationRef.current) {
         map.removeLayer(userCurrentLocationRef.current);
@@ -126,7 +148,6 @@ function App() {
       return !prev;
     });
   }
-
   return (
     <>
       <div id="map" style={{ height: "100vh" }}></div>
@@ -136,7 +157,8 @@ function App() {
         color="white"
         style={{
           position: "absolute",
-          bottom: "90px", // adjust as needed
+          // bottom: isMobile ? "100px" : "90px",
+          bottom: "90px",
           right: "14px",
           zIndex: 1000,
         }}
