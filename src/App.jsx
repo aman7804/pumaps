@@ -17,7 +17,6 @@ function App() {
   const hasCenteredRef = useRef(false);
   const userMovedRef = useRef(true);
   const watchIdRef = useRef(null);
-  const zoomed = useRef(null);
 
   // --- State ---
   const [isGpsOn, setIsGpsOn] = useState(false);
@@ -93,11 +92,14 @@ function App() {
       userLocationRef.current = L.featureGroup([marker, circle]).addTo(map);
 
       if (!hasCenteredRef.current && !userMovedRef.current) {
-        map.setView(userLocationRef.current.getLatLng(), map.getZoom());
+        map.setView(
+          userLocationRef.current.getBounds().getCenter(),
+          map.getZoom()
+        );
+
         hasCenteredRef.current = true;
       }
-
-      if (isGpsOn) map.setView([lat, lng]);
+      if (isGpsOn) map.panTo([lat, lng]);
     }
 
     function handleError(e) {
