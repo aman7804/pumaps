@@ -8,6 +8,8 @@ import getMarkerData from "./getMarkerData";
 import getIcons from "./getIcons";
 import "leaflet.markercluster";
 import Drawer from "./components/Drawer";
+import Search from "./components/Search";
+import ZoomControls from "./components/ZoomControls";
 
 function App() {
   const icons = useRef(getIcons()).current;
@@ -71,7 +73,7 @@ function App() {
     ).addTo(map);
 
     map.zoomControl.remove();
-    L.control.zoom({ position: "bottomright" }).addTo(map);
+    // L.control.zoom({ position: "bottomright" }).addTo(map);
 
     map.on("zoomstart", () => {
       userMovedRef.current = true;
@@ -166,19 +168,24 @@ function App() {
     <>
       <div id="map" style={{ height: "100vh" }}></div>
 
+      <Search />
       <Fab
         size="small"
         color="white"
         component="span"
         style={{
           position: "absolute",
-          bottom: "90px",
-          right: "14px",
+          bottom: "110px",
+          right: "13px",
           zIndex: 1000,
         }}
       >
-        <GPS toggleGps={toggleGps} isGpsOn={isGpsOn} />
+        <GPS id="gps" toggleGps={toggleGps} isGpsOn={isGpsOn} />
       </Fab>
+      <ZoomControls
+        onZoomIn={() => mapRef.current.zoomIn()}
+        onZoomOut={() => mapRef.current.zoomOut()}
+      />
 
       {isMobile && isDrawerOpen && (
         <Drawer
