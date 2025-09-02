@@ -6,6 +6,7 @@ import { grey } from "@mui/material/colors";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import LocationInfo from "./LocationInfo";
 import RouteInfo from "./RouteInfo";
+import { useSelector } from "react-redux";
 
 const drawerBleeding = 56;
 
@@ -33,7 +34,6 @@ function Drawer({
   isOpen,
   toggleDrawerVisibility,
   toggleDrawer,
-  currentMarkerData,
   onClickDirection,
   setDrawerView,
   drawerView,
@@ -50,6 +50,10 @@ function Drawer({
     setIsDirectionClicked(true);
   };
 
+  const currentMarkerData = useSelector((state) => state.map.currentMarkerData);
+  React.useEffect(() => {
+    console.log("currentMarkerData ", currentMarkerData);
+  }, [currentMarkerData]);
   return (
     <Root>
       <CssBaseline />

@@ -5,7 +5,7 @@ export function addAllMarkers(
   markerData,
   toggleDrawerVisibility,
   toggleDrawer,
-  setCurrentMarkerData,
+  getCurrentMarkerData,
   setDrawerView
 ) {
   Object.values(markerData).forEach((markerType) => {
@@ -67,7 +67,7 @@ export function addAllMarkers(
         toggleDrawerVisibility(true)();
         setDrawerView("OPEN");
         toggleDrawer(true);
-        setCurrentMarkerData(e.target.options.myData);
+        getCurrentMarkerData(e.target.options.myData);
       });
 
       markerCluster.addLayer(marker);

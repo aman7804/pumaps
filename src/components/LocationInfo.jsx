@@ -2,6 +2,7 @@ import * as React from "react";
 import { Typography, Stack, Box } from "@mui/material";
 import DrawerButton from "./DrawerButton";
 import DrawerPhotos from "./DrawerPhotos";
+import { useSelector } from "react-redux";
 
 export default function LocationInfo({
   currentMarkerData,

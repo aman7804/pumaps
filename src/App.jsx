@@ -10,6 +10,8 @@ import "leaflet.markercluster";
 import Drawer from "./components/Drawer";
 import Search from "./components/Search";
 import ZoomControls from "./components/ZoomControls";
+import { setCurrentMarkerData } from "./store/mapSlice";
+import { useDispatch } from "react-redux";
 
 function App() {
   const icons = useRef(getIcons()).current;
@@ -24,14 +26,17 @@ function App() {
   const [isGpsOn, setIsGpsOn] = useState(false);
   const [openDrawerFully, setOpenDrawerFully] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [currentMarkerData, setCurrentMarkerData] = useState(null);
   const [drawerView, setDrawerView] = useState("CLOSED");
 
-  const getCurrentMarkerData = async (markerSmallData) => {
+  const dispatch = useDispatch();
+
+  const getCurrentMarkerData = (markerSmallData) => {
     const [markerFullData] = Object.values(markerData)
       .flat()
       .filter((m) => m.name === markerSmallData.name);
-    setCurrentMarkerData(markerFullData);
+    console.log("typeof markerFullData: ", markerFullData);
+
+    dispatch(setCurrentMarkerData(markerFullData));
   };
 
   const onClickDirection = () => {};
@@ -192,7 +197,6 @@ function App() {
           isOpen={openDrawerFully}
           toggleDrawerVisibility={toggleDrawerVisibility}
           toggleDrawer={toggleDrawer}
-          currentMarkerData={currentMarkerData}
           onClickDirection={onClickDirection}
           setDrawerView={setDrawerView}
           drawerView={drawerView}
