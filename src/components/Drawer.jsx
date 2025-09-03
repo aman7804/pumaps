@@ -1,109 +1,83 @@
-import * as React from "react";
-import { Global } from "@emotion/react";
-import { styled } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-import { grey } from "@mui/material/colors";
-import SwipeableDrawer from "@mui/material/SwipeableDrawer";
+import React, { useRef, useState } from "react";
+import { BottomSheet } from "react-spring-bottom-sheet";
+import "react-spring-bottom-sheet/dist/style.css";
 import LocationInfo from "./LocationInfo";
 import RouteInfo from "./RouteInfo";
 import { useSelector } from "react-redux";
+import { Typography, Box } from "@mui/material";
 
-const drawerBleeding = 56;
-
-const Root = styled("div")({
-  height: "100%",
-  backgroundColor: grey[100],
-  touchAction: "none",
-});
-
-const StyledBox = styled("div")({
-  backgroundColor: "#fff",
-});
-
-const Puller = styled("div")({
-  width: 30,
-  height: 6,
-  backgroundColor: grey[300],
-  borderRadius: 3,
-  position: "absolute",
-  top: 8,
-  left: "calc(50% - 15px)",
-});
-
-function Drawer({
+export default function Drawer({
   isOpen,
-  toggleDrawerVisibility,
   toggleDrawer,
-  onClickDirection,
-  setDrawerView,
   drawerView,
+  setDrawerView,
+  onClickDirection,
 }) {
-  const [isDirectionClicked, setIsDirectionClicked] = React.useState(false);
-
-  React.useEffect(() => {
-    console.log("isOpen:", isOpen, "drawerView: ", drawerView);
-  }, [isOpen, drawerView]);
-
-  const handleDirectionClick = () => {
-    onClickDirection();
-    setDrawerView("ROUTE_INFO");
-    setIsDirectionClicked(true);
+  const drawerHeightVal = {
+    minHeight: 0.11,
+    maxHeight: 0.5,
   };
 
+  const [currentDrawerHeight, setCurrentDrawerHeight] = useState(null);
   const currentMarkerData = useSelector((state) => state.map.currentMarkerData);
-  React.useEffect(() => {
-    console.log("currentMarkerData ", currentMarkerData);
-  }, [currentMarkerData]);
-  return (
-    <Root>
-      <CssBaseline />
-      <Global
-        styles={{
-          ".MuiDrawer-root > .MuiPaper-root": {
-            height: `calc(50% - ${drawerBleeding}px)`,
-            overflow: "visible",
-          },
-        }}
-      />
+  const sheetRef = useRef(null);
+  const minimizeDrawer = () => {
+    // if (!sheetRef.current) return;
+    sheetRef.current?.snapTo(1);
+  };
 
-      <SwipeableDrawer
-        anchor="bottom"
-        open={isOpen}
-        onClose={() => {
-          setDrawerView("MINIMIZED");
-          toggleDrawerVisibility(false)();
-        }}
-        onOpen={() => {
-          setDrawerView("OPEN");
-          toggleDrawerVisibility(true)();
-        }}
-        swipeAreaWidth={drawerBleeding}
-        disableSwipeToOpen={false}
-        keepMounted
-      >
-        <StyledBox
+  return (
+    <BottomSheet
+      ref={sheetRef}
+      open={isOpen}
+      onDismiss={() => toggleDrawer(false)}
+      snapPoints={({ maxHeight }) => [
+        drawerHeightVal.minHeight * maxHeight,
+        drawerHeightVal.maxHeight * maxHeight,
+      ]}
+      animationConfig={{ duration: 100 }}
+      defaultSnap={({ maxHeight }) => drawerHeightVal.maxHeight * maxHeight}
+      blocking={false}
+      header={
+        // Header
+        <Box
           sx={{
-            position: "absolute",
-            top: -drawerBleeding,
-            borderTopLeftRadius: 8,
-            borderTopRightRadius: 8,
-            visibility: "visible",
-            right: 0,
-            left: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 2,
+            py: 1,
           }}
         >
-          <Puller />
+          {/* Puller in the center */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: 8,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 40,
+              height: 4,
+              bgcolor: "grey.400",
+              borderRadius: 2,
+            }}
+          />
 
-          {currentMarkerData &&
-            (drawerView === "OPEN" || drawerView === "MINIMIZED") && (
-              <LocationInfo
-                currentMarkerData={currentMarkerData}
-                handleDirectionClick={handleDirectionClick}
-              />
-            )}
+          {/* Name & type */}
+          <Box sx={{ textAlign: "left" }}>
+            <Typography sx={{ fontWeight: 600, color: "black" }}>
+              {drawerView == "ROUTE_INFO"
+                ? currentMarkerData?.type
+                : currentMarkerData?.name || ""}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              {drawerView == "ROUTE_INFO"
+                ? currentMarkerData?.name
+                : currentMarkerData?.type || ""}
+            </Typography>
+          </Box>
 
-          {currentMarkerData && drawerView === "ROUTE_INFO" && <RouteInfo />}
-
+          {/* Close button */}
           <img
             src="assets/close.svg"
             alt="Close"
@@ -111,20 +85,28 @@ function Drawer({
               setDrawerView("CLOSED");
               toggleDrawer(false);
             }}
-            style={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-              width: 24,
-              height: 24,
-              cursor: "pointer",
-              pointerEvents: "auto",
-            }}
+            style={{ width: 24, height: 24, cursor: "pointer" }}
           />
-        </StyledBox>
-      </SwipeableDrawer>
-    </Root>
+        </Box>
+      }
+      style={{
+        zIndex: 9999,
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+      }}
+    >
+      <div style={{ padding: 2 }}>
+        {currentMarkerData &&
+          (drawerView === "OPEN" || drawerView === "MINIMIZED") && (
+            <LocationInfo
+              currentMarkerData={currentMarkerData}
+              handleDirectionClick={onClickDirection}
+            />
+          )}
+        {currentMarkerData && drawerView === "ROUTE_INFO" && <RouteInfo />}
+      </div>
+    </BottomSheet>
   );
 }
-
-export default Drawer;

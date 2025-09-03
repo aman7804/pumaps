@@ -7,6 +7,7 @@ const uiSlice = createSlice({
     isDrawerOpen: false,
     openDrawerFully: false,
     drawerView: "CLOSED", // could be "CLOSED" | "INFO" | "DIRECTION"
+    showFTC: false,
   },
   reducers: {
     toggleGps: (state) => {
@@ -21,9 +22,17 @@ const uiSlice = createSlice({
     setDrawerView: (state, action) => {
       state.drawerView = action.payload;
     },
+    setShowFTC: (state, action) => {
+      state.showFTC = action.payload;
+    },
   },
 });
 
-export const { toggleGps, setDrawerOpen, setOpenDrawerFully, setDrawerView } =
-  uiSlice.actions;
+export const {
+  toggleGps,
+  setDrawerOpen,
+  setOpenDrawerFully,
+  setDrawerView,
+  setShowFTC,
+} = uiSlice.actions;
 export default uiSlice.reducer;

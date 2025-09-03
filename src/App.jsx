@@ -11,7 +11,9 @@ import Drawer from "./components/Drawer";
 import Search from "./components/Search";
 import ZoomControls from "./components/ZoomControls";
 import { setCurrentMarkerData } from "./store/mapSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import FTC from "./components/FTC";
+import { setShowFTC } from "./store/uiSlice";
 
 function App() {
   const icons = useRef(getIcons()).current;
@@ -27,8 +29,16 @@ function App() {
   const [openDrawerFully, setOpenDrawerFully] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState("CLOSED");
+  // const [showFTC, setShowFTC] = useState(false);
+  const [showFullFTC, setShowFullFTC] = useState(false);
+
+  const toggleFTC = (isOpen) => setShowFTC(isOpen);
+  const toggleFullFTC = (isOpen) => setShowFullFTC(isOpen);
 
   const dispatch = useDispatch();
+
+  // useSelector
+  const showFTC = useSelector((state) => state.ui.showFTC);
 
   const getCurrentMarkerData = (markerSmallData) => {
     const [markerFullData] = Object.values(markerData)
@@ -39,8 +49,12 @@ function App() {
     dispatch(setCurrentMarkerData(markerFullData));
   };
 
-  const onClickDirection = () => {};
+  const onClickDirection = () => {
+    setDrawerView("ROUTE_INFO");
+    dispatch(setShowFTC(true));
+  };
 
+  // isMobile screen?
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 480);
@@ -168,12 +182,18 @@ function App() {
       return !prev;
     });
   };
+  useEffect(() => {
+    console.log("isDrawerOpen", isDrawerOpen);
+  }, [isDrawerOpen]);
 
   return (
     <>
       <div id="map" style={{ height: "100vh" }}></div>
-
-      <Search />
+      {showFTC ? (
+        <FTC showFullFTC={showFullFTC} toggleFullFTC={toggleFullFTC} />
+      ) : (
+        <Search />
+      )}
       <Fab
         size="small"
         color="white"
@@ -181,7 +201,7 @@ function App() {
         style={{
           position: "absolute",
           bottom: "110px",
-          right: "13px",
+          right: "13.5px",
           zIndex: 1000,
         }}
       >

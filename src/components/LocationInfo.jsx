@@ -2,7 +2,6 @@ import * as React from "react";
 import { Typography, Stack, Box } from "@mui/material";
 import DrawerButton from "./DrawerButton";
 import DrawerPhotos from "./DrawerPhotos";
-import { useSelector } from "react-redux";
 
 export default function LocationInfo({
   currentMarkerData,
@@ -51,14 +50,6 @@ export default function LocationInfo({
     <>
       {currentMarkerData && (
         <>
-          {/* Name & type */}
-          <Typography sx={{ px: 2, pt: 2, color: "black" }}>
-            {currentMarkerData.name}
-          </Typography>
-          <Typography variant="body2" sx={{ px: 2, color: "text.secondary" }}>
-            {currentMarkerData.type}
-          </Typography>
-
           {/* Buttons */}
           <Stack direction="row" px={2} py={1} spacing={2}>
             <DrawerButton
