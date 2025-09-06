@@ -8,6 +8,7 @@ import { Typography, Box } from "@mui/material";
 import { setShowFTC } from "../store/uiSlice";
 
 export default function Drawer({
+  mapRef,
   isOpen,
   toggleDrawer,
   drawerView,
@@ -20,7 +21,7 @@ export default function Drawer({
     middleHeight: 0.75,
   };
 
-  const [currentDrawerHeight, setCurrentDrawerHeight] = useState(null);
+  const currentPathRoutes = useSelector((state) => state.map.currentPathRoutes);
   const currentMarkerData = useSelector((state) => state.map.currentMarkerData);
   const sheetRef = useRef(null);
 
@@ -31,12 +32,34 @@ export default function Drawer({
   const dispatch = useDispatch();
   const maxHeightRef = useRef(null);
 
+  const handleDrawerClose = () => {
+    if (drawerView == "ROUTE_INFO") {
+      setDrawerView("LOCATION_INFO");
+      dispatch(setShowFTC(false));
+      changeDrawerHeight(drawerHeightVal.maxHeight);
+      mapRef.current.removeLayer(currentPathRoutes);
+    } else {
+      setDrawerView("CLOSED");
+      toggleDrawer(false);
+    }
+  };
+
   return (
     <BottomSheet
       ref={sheetRef}
       onClick={() => {}}
       open={isOpen}
-      onDismiss={() => toggleDrawer(false)}
+      onDismiss={() => {
+        if (drawerView == "ROUTE_INFO") {
+          setDrawerView("LOCATION_INFO");
+          dispatch(setShowFTC(false));
+          mapRef.current.removeLayer(currentPathRoutes);
+        } else {
+          setDrawerView("CLOSED");
+        }
+        toggleDrawer(false);
+        mapRef.current.removeLayer(currentPathRoutes);
+      }}
       snapPoints={({ maxHeight }) => {
         maxHeightRef.current = maxHeight;
         return [
@@ -89,16 +112,7 @@ export default function Drawer({
           <img
             src="assets/close.svg"
             alt="Close"
-            onClick={() => {
-              if (drawerView == "ROUTE_INFO") {
-                setDrawerView("LOCATION_INFO");
-                dispatch(setShowFTC(false));
-                changeDrawerHeight(drawerHeightVal.maxHeight);
-              } else {
-                setDrawerView("CLOSED");
-                toggleDrawer(false);
-              }
-            }}
+            onClick={handleDrawerClose}
             style={{ width: 24, height: 24, cursor: "pointer" }}
           />
         </Box>

@@ -55,10 +55,10 @@ function App() {
       userLocationRef.current.getLayers()[0].getLatLng(),
       currentMarkerData.coords
     );
-    setCurrentPathRoutes(routes);
-    L.polyline(routes[0].points, { color: "blue" }).addTo(mapRef.current);
-
-    console.log("routes", routes);
+    const currentPathRoutes = L.polyline(routes[0].points, {
+      color: "blue",
+    }).addTo(mapRef.current);
+    dispatch(setCurrentPathRoutes(currentPathRoutes));
   };
 
   // isMobile screen?
@@ -189,9 +189,6 @@ function App() {
       return !prev;
     });
   };
-  useEffect(() => {
-    console.log("isDrawerOpen", isDrawerOpen);
-  }, [isDrawerOpen]);
 
   return (
     <>
@@ -221,6 +218,7 @@ function App() {
 
       {isMobile && isDrawerOpen && (
         <Drawer
+          mapRef={mapRef}
           isOpen={openDrawerFully}
           toggleDrawerVisibility={toggleDrawerVisibility}
           toggleDrawer={toggleDrawer}
