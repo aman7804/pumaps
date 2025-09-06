@@ -3,14 +3,14 @@ import React, { useEffect, useRef, useState } from "react";
 import "./App.css";
 import GPS from "./components/GPS";
 import { Fab } from "@mui/material";
-import { addAllMarkers } from "./helper";
+import { addAllMarkers, getRoutes } from "./helper";
 import getMarkerData from "./getMarkerData";
 import getIcons from "./getIcons";
 import "leaflet.markercluster";
 import Drawer from "./components/Drawer";
 import Search from "./components/Search";
 import ZoomControls from "./components/ZoomControls";
-import { setCurrentMarkerData } from "./store/mapSlice";
+import { setCurrentMarkerData, setCurrentPathRoutes } from "./store/mapSlice";
 import { useDispatch, useSelector } from "react-redux";
 import FTC from "./components/FTC";
 import { setShowFTC } from "./store/uiSlice";
@@ -29,7 +29,6 @@ function App() {
   const [openDrawerFully, setOpenDrawerFully] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerView, setDrawerView] = useState("CLOSED");
-  // const [showFTC, setShowFTC] = useState(false);
   const [showFullFTC, setShowFullFTC] = useState(false);
 
   const toggleFTC = (isOpen) => setShowFTC(isOpen);
@@ -39,19 +38,27 @@ function App() {
 
   // useSelector
   const showFTC = useSelector((state) => state.ui.showFTC);
+  const currentMarkerData = useSelector((state) => state.map.currentMarkerData);
 
   const getCurrentMarkerData = (markerSmallData) => {
     const [markerFullData] = Object.values(markerData)
       .flat()
       .filter((m) => m.name === markerSmallData.name);
-    console.log("typeof markerFullData: ", markerFullData);
 
     dispatch(setCurrentMarkerData(markerFullData));
   };
 
-  const onClickDirection = () => {
+  const onClickDirection = async () => {
     setDrawerView("ROUTE_INFO");
     dispatch(setShowFTC(true));
+    const routes = await getRoutes(
+      userLocationRef.current.getLayers()[0].getLatLng(),
+      currentMarkerData.coords
+    );
+    setCurrentPathRoutes(routes);
+    L.polyline(routes[0].points, { color: "blue" }).addTo(mapRef.current);
+
+    console.log("routes", routes);
   };
 
   // isMobile screen?

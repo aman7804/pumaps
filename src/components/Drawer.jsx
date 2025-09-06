@@ -3,8 +3,9 @@ import { BottomSheet } from "react-spring-bottom-sheet";
 import "react-spring-bottom-sheet/dist/style.css";
 import LocationInfo from "./LocationInfo";
 import RouteInfo from "./RouteInfo";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Typography, Box } from "@mui/material";
+import { setShowFTC } from "../store/uiSlice";
 
 export default function Drawer({
   isOpen,
@@ -16,30 +17,39 @@ export default function Drawer({
   const drawerHeightVal = {
     minHeight: 0.11,
     maxHeight: 0.5,
+    middleHeight: 0.75,
   };
 
   const [currentDrawerHeight, setCurrentDrawerHeight] = useState(null);
   const currentMarkerData = useSelector((state) => state.map.currentMarkerData);
   const sheetRef = useRef(null);
-  const minimizeDrawer = () => {
-    // if (!sheetRef.current) return;
-    sheetRef.current?.snapTo(1);
+
+  const changeDrawerHeight = (value) => {
+    sheetRef.current?.snapTo(value * maxHeightRef.current);
   };
+
+  const dispatch = useDispatch();
+  const maxHeightRef = useRef(null);
 
   return (
     <BottomSheet
       ref={sheetRef}
+      onClick={() => {}}
       open={isOpen}
       onDismiss={() => toggleDrawer(false)}
-      snapPoints={({ maxHeight }) => [
-        drawerHeightVal.minHeight * maxHeight,
-        drawerHeightVal.maxHeight * maxHeight,
-      ]}
+      snapPoints={({ maxHeight }) => {
+        maxHeightRef.current = maxHeight;
+        return [
+          drawerHeightVal.minHeight * maxHeight,
+          drawerHeightVal.maxHeight * maxHeight,
+          drawerHeightVal.middleHeight * maxHeight,
+        ];
+      }}
       animationConfig={{ duration: 100 }}
       defaultSnap={({ maxHeight }) => drawerHeightVal.maxHeight * maxHeight}
       blocking={false}
+      // Header
       header={
-        // Header
         <Box
           sx={{
             display: "flex",
@@ -64,16 +74,14 @@ export default function Drawer({
           />
 
           {/* Name & type */}
-          <Box sx={{ textAlign: "left" }}>
+          <Box sx={{ textAlign: "left" }} height="45px">
             <Typography sx={{ fontWeight: 600, color: "black" }}>
               {drawerView == "ROUTE_INFO"
-                ? currentMarkerData?.type
+                ? "Walk - 10 min (1 km)"
                 : currentMarkerData?.name || ""}
             </Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {drawerView == "ROUTE_INFO"
-                ? currentMarkerData?.name
-                : currentMarkerData?.type || ""}
+              {(drawerView == "LOCATION_INFO" && currentMarkerData?.type) || ""}
             </Typography>
           </Box>
 
@@ -82,8 +90,14 @@ export default function Drawer({
             src="assets/close.svg"
             alt="Close"
             onClick={() => {
-              setDrawerView("CLOSED");
-              toggleDrawer(false);
+              if (drawerView == "ROUTE_INFO") {
+                setDrawerView("LOCATION_INFO");
+                dispatch(setShowFTC(false));
+                changeDrawerHeight(drawerHeightVal.maxHeight);
+              } else {
+                setDrawerView("CLOSED");
+                toggleDrawer(false);
+              }
             }}
             style={{ width: 24, height: 24, cursor: "pointer" }}
           />
@@ -97,12 +111,18 @@ export default function Drawer({
         right: 0,
       }}
     >
+      {/*LocationInfo and RouteInfo*/}
       <div style={{ padding: 2 }}>
         {currentMarkerData &&
-          (drawerView === "OPEN" || drawerView === "MINIMIZED") && (
+          (drawerView === "OPEN" ||
+            drawerView === "MINIMIZED" ||
+            drawerView === "LOCATION_INFO") && (
             <LocationInfo
               currentMarkerData={currentMarkerData}
-              handleDirectionClick={onClickDirection}
+              handleDirectionClick={() => {
+                onClickDirection();
+                changeDrawerHeight(drawerHeightVal.minHeight);
+              }}
             />
           )}
         {currentMarkerData && drawerView === "ROUTE_INFO" && <RouteInfo />}
