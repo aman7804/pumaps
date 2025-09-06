@@ -10,7 +10,11 @@ import "leaflet.markercluster";
 import Drawer from "./components/Drawer";
 import Search from "./components/Search";
 import ZoomControls from "./components/ZoomControls";
-import { setCurrentMarkerData, setCurrentPathRoutes } from "./store/mapSlice";
+import {
+  setCurrentMarkerData,
+  setCurrentPathRoutes,
+  setCurrentRouteInfo,
+} from "./store/mapSlice";
 import { useDispatch, useSelector } from "react-redux";
 import FTC from "./components/FTC";
 import { setShowFTC } from "./store/uiSlice";
@@ -39,6 +43,10 @@ function App() {
   // useSelector
   const showFTC = useSelector((state) => state.ui.showFTC);
   const currentMarkerData = useSelector((state) => state.map.currentMarkerData);
+  const currentMarker = useSelector((state) => state.map.currentMarker);
+
+  const currentMarkerRef = useRef(null);
+  currentMarkerRef.current = currentMarker;
 
   const getCurrentMarkerData = (markerSmallData) => {
     const [markerFullData] = Object.values(markerData)
@@ -58,6 +66,7 @@ function App() {
     const currentPathRoutes = L.polyline(routes[0].points, {
       color: "blue",
     }).addTo(mapRef.current);
+    dispatch(setCurrentRouteInfo(routes));
     dispatch(setCurrentPathRoutes(currentPathRoutes));
   };
 
@@ -117,7 +126,9 @@ function App() {
       toggleDrawerVisibility,
       toggleDrawer,
       getCurrentMarkerData,
-      setDrawerView
+      setDrawerView,
+      dispatch,
+      currentMarkerRef
     );
 
     function updateLocation({ coords }) {
@@ -220,11 +231,10 @@ function App() {
         <Drawer
           mapRef={mapRef}
           isOpen={openDrawerFully}
-          toggleDrawerVisibility={toggleDrawerVisibility}
           toggleDrawer={toggleDrawer}
-          onClickDirection={onClickDirection}
-          setDrawerView={setDrawerView}
           drawerView={drawerView}
+          setDrawerView={setDrawerView}
+          onClickDirection={onClickDirection}
         />
       )}
     </>

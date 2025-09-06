@@ -1,5 +1,6 @@
 import L from "leaflet";
 import polyline from "@mapbox/polyline";
+import { setCurrentMarker } from "./store/mapSlice";
 
 export function addAllMarkers(
   map,
@@ -7,7 +8,9 @@ export function addAllMarkers(
   toggleDrawerVisibility,
   toggleDrawer,
   getCurrentMarkerData,
-  setDrawerView
+  setDrawerView,
+  dispatch,
+  currentMarkerRef
 ) {
   Object.values(markerData).forEach((markerType) => {
     const markerCluster = L.markerClusterGroup({
@@ -69,11 +72,24 @@ export function addAllMarkers(
         setDrawerView("OPEN");
         toggleDrawer(true);
         getCurrentMarkerData(e.target.options.myData);
-      });
 
+        // reset previous marker’s icon
+        const prevMarker = currentMarkerRef.current;
+        if (prevMarker && prevMarker !== marker) {
+          prevMarker.setIcon(prevMarker.options.myData.icon); // revert to original icon
+        }
+
+        marker.setIcon(
+          L.icon({
+            iconUrl: "assets/redLocationIcon.png",
+            iconSize: [15, 15],
+          })
+        );
+
+        dispatch(setCurrentMarker(marker));
+      });
       markerCluster.addLayer(marker);
     });
-
     map.addLayer(markerCluster);
   });
 }

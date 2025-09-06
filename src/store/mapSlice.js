@@ -6,6 +6,8 @@ const mapSlice = createSlice({
     currentMarkerData: null,
     userLocation: null,
     currentPathRoutes: null,
+    currentRouteInfo: null,
+    currentMarker: null,
   },
   reducers: {
     setCurrentMarkerData: (state, action) => {
@@ -17,9 +19,20 @@ const mapSlice = createSlice({
     setCurrentPathRoutes: (state, action) => {
       state.currentPathRoutes = action.payload;
     },
+    setCurrentRouteInfo: (state, action) => {
+      state.currentRouteInfo = action.payload;
+    },
+    setCurrentMarker: (state, action) => {
+      state.currentMarker = action.payload;
+    },
   },
 });
 
-export const { setCurrentMarkerData, setUserLocation, setCurrentPathRoutes } =
-  mapSlice.actions;
+export const {
+  setCurrentMarkerData,
+  setUserLocation,
+  setCurrentPathRoutes,
+  setCurrentRouteInfo,
+  setCurrentMarker,
+} = mapSlice.actions;
 export default mapSlice.reducer;

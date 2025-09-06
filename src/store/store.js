@@ -12,8 +12,16 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ["mapSlice/setCurrentMarkerData"],
-        ignoredPaths: ["map.currentMarkerData"],
+        ignoredActions: [
+          "mapSlice/setCurrentMarkerData",
+          "mapSlice/setCurrentMarker",
+          "mapSlice/setCurrentPathRoutes",
+        ],
+        ignoredPaths: [
+          "map.currentMarkerData",
+          "map.currentMarker",
+          "map.currentPathRoutes",
+        ],
       },
     }),
 });

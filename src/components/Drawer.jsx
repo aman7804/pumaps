@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BottomSheet } from "react-spring-bottom-sheet";
 import "react-spring-bottom-sheet/dist/style.css";
 import LocationInfo from "./LocationInfo";
@@ -6,6 +6,7 @@ import RouteInfo from "./RouteInfo";
 import { useDispatch, useSelector } from "react-redux";
 import { Typography, Box } from "@mui/material";
 import { setShowFTC } from "../store/uiSlice";
+import { setCurrentMarker } from "../store/mapSlice";
 
 export default function Drawer({
   mapRef,
@@ -22,25 +23,34 @@ export default function Drawer({
   };
 
   const currentPathRoutes = useSelector((state) => state.map.currentPathRoutes);
+  const currentRouteInfo = useSelector((state) => state.map.currentRouteInfo);
   const currentMarkerData = useSelector((state) => state.map.currentMarkerData);
+  const currentMarker = useSelector((state) => state.map.currentMarker);
   const sheetRef = useRef(null);
 
+  const maxHeightRef = useRef(null);
   const changeDrawerHeight = (value) => {
     sheetRef.current?.snapTo(value * maxHeightRef.current);
   };
 
+  useEffect(() => {
+    console.log("currentRouteInfo", currentRouteInfo);
+  }, [currentRouteInfo]);
+
   const dispatch = useDispatch();
-  const maxHeightRef = useRef(null);
 
   const handleDrawerClose = () => {
     if (drawerView == "ROUTE_INFO") {
       setDrawerView("LOCATION_INFO");
       dispatch(setShowFTC(false));
       changeDrawerHeight(drawerHeightVal.maxHeight);
-      mapRef.current.removeLayer(currentPathRoutes);
+      if (currentPathRoutes) mapRef.current.removeLayer(currentPathRoutes);
     } else {
       setDrawerView("CLOSED");
       toggleDrawer(false);
+      if (currentMarker && currentMarkerData?.icon) {
+        currentMarker.setIcon(currentMarkerData.icon).addTo(mapRef.current);
+      }
     }
   };
 
@@ -99,8 +109,12 @@ export default function Drawer({
           {/* Name & type */}
           <Box sx={{ textAlign: "left" }} height="45px">
             <Typography sx={{ fontWeight: 600, color: "black" }}>
-              {drawerView == "ROUTE_INFO"
-                ? "Walk - 10 min (1 km)"
+              {drawerView == "ROUTE_INFO" && currentRouteInfo?.length > 0
+                ? `Walk - ${(currentRouteInfo[0].time / 60000).toFixed(
+                    1
+                  )} min (${(currentRouteInfo[0].distance / 1000).toFixed(
+                    2
+                  )} km)`
                 : currentMarkerData?.name || ""}
             </Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
