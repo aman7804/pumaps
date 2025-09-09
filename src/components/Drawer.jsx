@@ -5,53 +5,94 @@ import LocationInfo from "./LocationInfo";
 import RouteInfo from "./RouteInfo";
 import { useDispatch, useSelector } from "react-redux";
 import { Typography, Box } from "@mui/material";
-import { setShowFTC } from "../store/uiSlice";
-import { setCurrentMarker } from "../store/mapSlice";
+import {
+  setChangeDrawerHeight,
+  setDrawerView,
+  setShowFTC,
+} from "../store/uiSlice";
+import {
+  setCurrentMarker,
+  setCurrentPathRoutes,
+  setCurrentRouteInfo,
+} from "../store/mapSlice";
+import { createIconForMarker, getRoutes } from "../helper";
 
 export default function Drawer({
   mapRef,
   isOpen,
   toggleDrawer,
-  drawerView,
-  setDrawerView,
-  onClickDirection,
+  currentPathRoutesRef,
+  userLocationRef,
 }) {
+  // useSelector
+  const currentPathRoutes = useSelector((state) => state.map.currentPathRoutes);
+  const currentRouteInfo = useSelector((state) => state.map.currentRouteInfo);
+  const currentMarkerData = useSelector((state) => state.map.currentMarkerData);
+  const currentMarker = useSelector((state) => state.map.currentMarker);
+  const drawerView = useSelector((state) => state.ui.drawerView);
+  const changeDrawerHeight = useSelector(
+    (state) => state.ui.changeDrawerHeight
+  );
+
+  //refs
+  const sheetRef = useRef(null);
+  const maxHeightRef = useRef(null);
+
+  const dispatch = useDispatch();
+
   const drawerHeightVal = {
     minHeight: 0.11,
     maxHeight: 0.5,
     middleHeight: 0.75,
   };
 
-  const currentPathRoutes = useSelector((state) => state.map.currentPathRoutes);
-  const currentRouteInfo = useSelector((state) => state.map.currentRouteInfo);
-  const currentMarkerData = useSelector((state) => state.map.currentMarkerData);
-  const currentMarker = useSelector((state) => state.map.currentMarker);
-  const sheetRef = useRef(null);
-
-  const maxHeightRef = useRef(null);
-  const changeDrawerHeight = (value) => {
-    sheetRef.current?.snapTo(value * maxHeightRef.current);
-  };
-
   useEffect(() => {
-    console.log("currentRouteInfo", currentRouteInfo);
-  }, [currentRouteInfo]);
-
-  const dispatch = useDispatch();
+    // if (sheetRef.current && maxHeightRef.current) {
+    const fn = (value) => {
+      sheetRef.current?.snapTo(value * maxHeightRef.current);
+    };
+    dispatch(setChangeDrawerHeight(fn)); // store a fresh function
+    // }
+  }, []);
 
   const handleDrawerClose = () => {
     if (drawerView == "ROUTE_INFO") {
-      setDrawerView("LOCATION_INFO");
+      dispatch(setDrawerView("LOCATION_INFO"));
       dispatch(setShowFTC(false));
       changeDrawerHeight(drawerHeightVal.maxHeight);
       if (currentPathRoutes) mapRef.current.removeLayer(currentPathRoutes);
     } else {
-      setDrawerView("CLOSED");
+      dispatch(setDrawerView("CLOSED"));
       toggleDrawer(false);
       if (currentMarker && currentMarkerData?.icon) {
-        currentMarker.setIcon(currentMarkerData.icon).addTo(mapRef.current);
+        currentMarker
+          .setIcon(
+            createIconForMarker(
+              currentMarker.name,
+              currentMarkerData.icon.options.iconUrl
+            )
+          )
+          .addTo(mapRef.current);
       }
     }
+  };
+
+  const onClickDirection = async () => {
+    dispatch(setDrawerView("ROUTE_INFO"));
+    dispatch(setShowFTC(true));
+    const routes = await getRoutes(
+      userLocationRef.current.getLayers()[0].getLatLng(),
+      currentMarkerData.coords
+    );
+    const routeLayer = L.polyline(routes[0].points, {
+      color: "blue",
+    }).addTo(mapRef.current);
+    if (currentPathRoutesRef.current) {
+      mapRef.current.removeLayer(currentPathRoutesRef.current);
+    }
+    currentPathRoutesRef.current = routeLayer;
+    dispatch(setCurrentRouteInfo(routes));
+    dispatch(setCurrentPathRoutes(routeLayer));
   };
 
   return (
@@ -61,11 +102,10 @@ export default function Drawer({
       open={isOpen}
       onDismiss={() => {
         if (drawerView == "ROUTE_INFO") {
-          setDrawerView("LOCATION_INFO");
+          dispatch(setDrawerView("LOCATION_INFO"));
           dispatch(setShowFTC(false));
-          mapRef.current.removeLayer(currentPathRoutes);
         } else {
-          setDrawerView("CLOSED");
+          dispatch(setDrawerView("CLOSED"));
         }
         toggleDrawer(false);
         mapRef.current.removeLayer(currentPathRoutes);
@@ -149,6 +189,12 @@ export default function Drawer({
               currentMarkerData={currentMarkerData}
               handleDirectionClick={() => {
                 onClickDirection();
+                console.log(
+                  "changeDrawerHeight type: ",
+                  typeof changeDrawerHeight
+                );
+                console.log("changeDrawerHeight: ", changeDrawerHeight);
+
                 changeDrawerHeight(drawerHeightVal.minHeight);
               }}
             />

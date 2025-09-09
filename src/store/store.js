@@ -16,11 +16,13 @@ export const store = configureStore({
           "mapSlice/setCurrentMarkerData",
           "mapSlice/setCurrentMarker",
           "mapSlice/setCurrentPathRoutes",
+          "ui/setChangeDrawerHeight",
         ],
         ignoredPaths: [
           "map.currentMarkerData",
           "map.currentMarker",
           "map.currentPathRoutes",
+          "ui.changeDrawerHeight",
         ],
       },
     }),

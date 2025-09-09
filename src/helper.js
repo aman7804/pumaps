@@ -1,96 +1,20 @@
 import L from "leaflet";
 import polyline from "@mapbox/polyline";
 import { setCurrentMarker } from "./store/mapSlice";
+import { useSelector } from "react-redux";
 
-export function addAllMarkers(
-  map,
-  markerData,
-  toggleDrawerVisibility,
-  toggleDrawer,
-  getCurrentMarkerData,
-  setDrawerView,
-  dispatch,
-  currentMarkerRef
-) {
-  Object.values(markerData).forEach((markerType) => {
-    const markerCluster = L.markerClusterGroup({
-      maxClusterRadius: (zoom) => {
-        const sizes = {
-          16: 80,
-          17: 70,
-          18: 60,
-          19: 50,
-          20: 40,
-          21: 30,
-          22: 20,
-        };
-        return sizes[zoom] || 10;
-      },
-      disableClusteringAtZoom: 25, // beyond zoom 25, no clustering
-      iconCreateFunction: (cluster) => {
-        const children = cluster.getAllChildMarkers();
-        const color = children[0]?.options.iconColor || "#000";
+export function createIconForMarker(locName, iconUrl, isActive = false) {
+  const scale = isActive ? 1.5 : 1; // enlarge active marker
 
-        return L.divIcon({
-          html: `
-            <div style="
-              width: 20px;
-              height: 20px;
-              background-color: ${color};
-              border-radius: 50%;
-              color: white;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              font-size: 16px;
-            ">
-              ${cluster.getChildCount()}
-            </div>
-          `,
-          className: "",
-          iconSize: L.point(25, 25),
-        });
-      },
-    });
-
-    markerType.forEach(({ coords, icon, name, iconColor }) => {
-      let marker = L.marker([coords.lat, coords.lng], {
-        icon: new L.divIcon({
-          className: "marker-div-icon",
-          html: `
-            <div class="marker-wrapper">
-              <img class="icon-img" src="${icon.options.iconUrl}">
-              <span class="icon-span">${name}</span>
-            </div>
-          `,
-          iconSize: [170, 25],
-        }),
-        iconColor,
-        myData: { coords, icon, name, iconColor }, // ✅ Ensure marker data is accessible
-      }).on("click", (e) => {
-        toggleDrawerVisibility(true)();
-        setDrawerView("OPEN");
-        toggleDrawer(true);
-        getCurrentMarkerData(e.target.options.myData);
-
-        // reset previous marker’s icon
-        const prevMarker = currentMarkerRef.current;
-        if (prevMarker && prevMarker !== marker) {
-          prevMarker.setIcon(prevMarker.options.myData.icon); // revert to original icon
-        }
-
-        marker.setIcon(
-          L.icon({
-            iconUrl: "assets/redLocationIcon.png",
-            iconSize: [15, 15],
-          })
-        );
-
-        dispatch(setCurrentMarker(marker));
-      });
-      markerCluster.addLayer(marker);
-    });
-    map.addLayer(markerCluster);
+  return new L.divIcon({
+    className: "marker-div-icon",
+    html: `
+      <div class="marker-wrapper">
+        <img class="location-icon-img" src="${iconUrl}" style="transform: scale(${scale}); width: 30px; height: 30px;" />
+        <span class="icon-span">${locName}</span>
+      </div>
+    `,
+    iconSize: null, // let CSS/HTML define size
   });
 }
 

@@ -40,12 +40,28 @@
 .read-the-docs {
   color: #888;
 } */
- @media (max-width: 480px) {
+@media (max-width: 480px) {
   .leaflet-control-zoom {
     bottom: 50px !important;
   }
 }
 .marker-glow {
-  filter: drop-shadow(0 0 6px #2A93EE);
+  filter: drop-shadow(0 0 6px #2a93ee);
 }
 
+/* .marker-wrapper {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 2px 4px;
+  border-radius: 4px;
+} */
+.location-icon-img {
+  width: 20px;
+  height: 20px;
+}
+/* .icon-span {
+  font-size: 12px;
+  margin-left: 4px;
+} */

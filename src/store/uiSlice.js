@@ -8,6 +8,7 @@ const uiSlice = createSlice({
     openDrawerFully: false,
     drawerView: "CLOSED", // could be "CLOSED" | "INFO" | "DIRECTION"
     showFTC: false,
+    changeDrawerHeight: null,
   },
   reducers: {
     toggleGps: (state) => {
@@ -25,6 +26,9 @@ const uiSlice = createSlice({
     setShowFTC: (state, action) => {
       state.showFTC = action.payload;
     },
+    setChangeDrawerHeight: (state, action) => {
+      state.changeDrawerHeight = action.payload;
+    },
   },
 });
 
@@ -34,5 +38,6 @@ export const {
   setOpenDrawerFully,
   setDrawerView,
   setShowFTC,
+  setChangeDrawerHeight,
 } = uiSlice.actions;
 export default uiSlice.reducer;
