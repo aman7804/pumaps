@@ -11,16 +11,35 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked"; // circle for A
 import RoomIcon from "@mui/icons-material/Room"; // location pin for B
 import MoreVertIcon from "@mui/icons-material/MoreVert"; // 3 vertical dots
-import { setShowFTC } from "../store/uiSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
-function FTC() {
+function FTC({ userLocationRef }) {
   const [expanded, setExpanded] = useState(false);
   const [focusedField, setFocusedField] = useState(null); // "source" or "destination"
   const [locations, setLocations] = useState({
-    source: "",
+    source: "Your Location",
+    sourceCoords: userLocationRef?.current?.getLayers?.()[0]?.getLatLng?.() ?? {
+      lat: 0,
+      lng: 0,
+    },
     destination: "",
+    destinationCoords: { lat: 0, lng: 0 },
   });
+
+  const currentMarkerData = useSelector((state) => state.map.currentMarkerData);
+  useEffect(() => {
+    if (currentMarkerData) {
+      setLocations((prev) => ({
+        ...prev,
+        destination: currentMarkerData.name ?? "",
+        destinationCoords: currentMarkerData.coords ?? { lat: 0, lng: 0 },
+      }));
+    }
+  }, [currentMarkerData]);
+
+  useEffect(() => {
+    console.log("locations: ", locations);
+  }, [locations]);
 
   const sourceRef = useRef(null);
   const destRef = useRef(null);
@@ -36,7 +55,9 @@ function FTC() {
   const handleSwap = () => {
     setLocations((prev) => ({
       source: prev.destination,
+      sourceCoords: prev.destinationCoords,
       destination: prev.source,
+      destinationCoords: prev.sourceCoords,
     }));
   };
 

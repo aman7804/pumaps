@@ -56,11 +56,7 @@ function App() {
         drawerHeightValObj={drawerHeightValObj}
         setExpandDrawer={setExpandDrawer}
       />
-      {showFTC ? (
-        <FTC showFullFTC={showFullFTC} toggleFullFTC={toggleFullFTC} />
-      ) : (
-        <Search />
-      )}
+      {showFTC ? <FTC userLocationRef={userLocationRef} /> : <Search />}
       {isMobile && isDrawerOpen && (
         <Drawer
           mapRef={mapRef}

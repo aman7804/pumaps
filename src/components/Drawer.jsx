@@ -11,11 +11,7 @@ import {
   setDrawerView,
   setShowFTC,
 } from "../store/uiSlice";
-import {
-  setCurrentMarker,
-  setCurrentPathRoutes,
-  setCurrentRouteInfo,
-} from "../store/mapSlice";
+import { setCurrentPathRoutes, setCurrentRouteInfo } from "../store/mapSlice";
 import { createIconForMarker, getRoutes } from "../helper";
 
 export default function Drawer({
