@@ -6,7 +6,8 @@ import RouteInfo from "./RouteInfo";
 import { useDispatch, useSelector } from "react-redux";
 import { Typography, Box } from "@mui/material";
 import {
-  setChangeDrawerHeight,
+  // setChangeDrawerHeight,
+  setDrawerHeightValue,
   setDrawerView,
   setShowFTC,
 } from "../store/uiSlice";
@@ -23,6 +24,7 @@ export default function Drawer({
   toggleDrawer,
   currentPathRoutesRef,
   userLocationRef,
+  drawerHeightValObj,
 }) {
   // useSelector
   const currentPathRoutes = useSelector((state) => state.map.currentPathRoutes);
@@ -30,36 +32,25 @@ export default function Drawer({
   const currentMarkerData = useSelector((state) => state.map.currentMarkerData);
   const currentMarker = useSelector((state) => state.map.currentMarker);
   const drawerView = useSelector((state) => state.ui.drawerView);
-  const changeDrawerHeight = useSelector(
-    (state) => state.ui.changeDrawerHeight
-  );
-
+  const drawerHeightValue = useSelector((state) => state.ui.drawerHeightValue);
   //refs
   const sheetRef = useRef(null);
   const maxHeightRef = useRef(null);
 
   const dispatch = useDispatch();
 
-  const drawerHeightVal = {
-    minHeight: 0.11,
-    maxHeight: 0.5,
-    middleHeight: 0.75,
-  };
-
   useEffect(() => {
-    // if (sheetRef.current && maxHeightRef.current) {
-    const fn = (value) => {
-      sheetRef.current?.snapTo(value * maxHeightRef.current);
-    };
-    dispatch(setChangeDrawerHeight(fn)); // store a fresh function
-    // }
-  }, []);
+    if (drawerHeightValue)
+      sheetRef.current?.snapTo(drawerHeightValue * maxHeightRef.current);
+  }, [drawerHeightValue]);
 
   const handleDrawerClose = () => {
     if (drawerView == "ROUTE_INFO") {
       dispatch(setDrawerView("LOCATION_INFO"));
       dispatch(setShowFTC(false));
-      changeDrawerHeight(drawerHeightVal.maxHeight);
+      // changeDrawerHeight(drawerHeightValObj.maxHeight);
+      if (drawerHeightValue !== drawerHeightValObj.maxHeight)
+        dispatch(setDrawerHeightValue(drawerHeightValObj.maxHeight));
       if (currentPathRoutes) mapRef.current.removeLayer(currentPathRoutes);
     } else {
       dispatch(setDrawerView("CLOSED"));
@@ -113,13 +104,13 @@ export default function Drawer({
       snapPoints={({ maxHeight }) => {
         maxHeightRef.current = maxHeight;
         return [
-          drawerHeightVal.minHeight * maxHeight,
-          drawerHeightVal.maxHeight * maxHeight,
-          drawerHeightVal.middleHeight * maxHeight,
+          drawerHeightValObj.minHeight * maxHeight,
+          drawerHeightValObj.maxHeight * maxHeight,
+          drawerHeightValObj.middleHeight * maxHeight,
         ];
       }}
       animationConfig={{ duration: 100 }}
-      defaultSnap={({ maxHeight }) => drawerHeightVal.maxHeight * maxHeight}
+      defaultSnap={({ maxHeight }) => drawerHeightValObj.maxHeight * maxHeight}
       blocking={false}
       // Header
       header={
@@ -189,13 +180,8 @@ export default function Drawer({
               currentMarkerData={currentMarkerData}
               handleDirectionClick={() => {
                 onClickDirection();
-                console.log(
-                  "changeDrawerHeight type: ",
-                  typeof changeDrawerHeight
-                );
-                console.log("changeDrawerHeight: ", changeDrawerHeight);
-
-                changeDrawerHeight(drawerHeightVal.minHeight);
+                if (drawerHeightValue !== drawerHeightValObj.minHeight)
+                  dispatch(setDrawerHeightValue(drawerHeightValObj.minHeight));
               }}
             />
           )}

@@ -32,6 +32,11 @@ function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const drawerHeightValObj = {
+    minHeight: 0.11,
+    maxHeight: 0.5,
+    middleHeight: 0.75,
+  };
   return (
     <>
       <MapView
@@ -39,6 +44,7 @@ function App() {
         userLocationRef={userLocationRef}
         toggleDrawer={toggleDrawer}
         currentPathRoutesRef={currentPathRoutesRef}
+        drawerHeightValObj={drawerHeightValObj}
       />
       {showFTC ? (
         <FTC showFullFTC={showFullFTC} toggleFullFTC={toggleFullFTC} />
@@ -52,6 +58,7 @@ function App() {
           toggleDrawer={toggleDrawer}
           currentPathRoutesRef={currentPathRoutesRef}
           userLocationRef={userLocationRef}
+          drawerHeightValObj={drawerHeightValObj}
         />
       )}
     </>

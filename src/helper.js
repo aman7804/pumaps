@@ -1,7 +1,5 @@
 import L from "leaflet";
 import polyline from "@mapbox/polyline";
-import { setCurrentMarker } from "./store/mapSlice";
-import { useSelector } from "react-redux";
 
 export function createIconForMarker(locName, iconUrl, isActive = false) {
   const scale = isActive ? 1.5 : 1; // enlarge active marker

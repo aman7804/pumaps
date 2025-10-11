@@ -1,7 +1,7 @@
 import L from "leaflet";
 import "leaflet.markercluster/dist/leaflet.markercluster"; // explicit path
 
-import { Fab } from "@mui/material";
+import { Drawer, Fab } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import GPS from "./GPS";
 import ZoomControls from "./ZoomControls";
@@ -9,7 +9,11 @@ import getMarkerData from "../getMarkerData";
 import getIcons from "../getIcons";
 import { createIconForMarker } from "../helper";
 import { setCurrentMarker, setCurrentMarkerData } from "../store/mapSlice";
-import { setDrawerView, setOpenDrawerFully } from "../store/uiSlice";
+import {
+  setDrawerHeightValue,
+  setDrawerView,
+  setOpenDrawerFully,
+} from "../store/uiSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function MapView({
@@ -17,14 +21,16 @@ export default function MapView({
   userLocationRef,
   toggleDrawer,
   currentPathRoutesRef,
+  drawerHeightValObj,
 }) {
   //usesate
   const [isGpsOn, setIsGpsOn] = useState(false);
 
   //useSelector
   const drawerView = useSelector((state) => state.ui.drawerView);
+  const prevDrawerView = useSelector((state) => state.ui.prevDrawerView);
   const currentMarker = useSelector((state) => state.map.currentMarker);
-
+  const drawerHeightValue = useSelector((state) => state.ui.drawerHeightValue);
   //refs
   const isGpsOnRef = useRef(isGpsOn);
   const icons = useRef(getIcons()).current;
@@ -33,6 +39,7 @@ export default function MapView({
   const userMovedRef = useRef(true);
   const watchIdRef = useRef(null);
   const currentMarkerRef = useRef(null);
+
   currentMarkerRef.current = currentMarker;
 
   const dispatch = useDispatch();
@@ -113,9 +120,17 @@ export default function MapView({
           myData: { coords, defaultIconUrl, name, iconColor },
         }).on("click", (e) => {
           toggleDrawerVisibility(true)();
+          if (drawerView === "LOCATION_INFO") {
+            if (drawerHeightValue !== drawerHeightValObj.minHeight)
+              dispatch(setDrawerHeightValue(drawerHeightValObj.minHeight)); // LOCATION_INFO should open at max height
+          } else {
+            if (drawerHeightValue !== drawerHeightValObj.maxHeight)
+              dispatch(setDrawerHeightValue(drawerHeightValObj.maxHeight)); // default or keep same
+          }
+
           dispatch(
             setDrawerView(
-              drawerView === "ROUTE_INFO" ? "LOCATION_INFO" : "OPEN"
+              drawerView === "LOCATION_INFO" ? "ROUTE_INFO" : "LOCATION_INFO"
             )
           );
           toggleDrawer(true);
@@ -130,8 +145,9 @@ export default function MapView({
             if (currentPathRoutesRef.current)
               map.removeLayer(currentPathRoutesRef.current);
 
-            if (drawerView === "ROUTE_INFO") {
-            }
+            // if (prevDrawerView === "ROUTE_INFO" && drawerView==) {
+            //   changeDrawerHeight(drawerHeightValObj.maxHeight);
+            // }
           }
 
           dispatch(setCurrentMarker(marker));
@@ -147,7 +163,6 @@ export default function MapView({
       map.addLayer(markerCluster);
     });
   }
-
   useEffect(() => {
     isGpsOnRef.current = isGpsOn;
     if (isGpsOn) {
