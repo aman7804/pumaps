@@ -9,11 +9,7 @@ import getMarkerData from "../getMarkerData";
 import getIcons from "../getIcons";
 import { createIconForMarker } from "../helper";
 import { setCurrentMarker, setCurrentMarkerData } from "../store/mapSlice";
-import {
-  setDrawerHeightValue,
-  setDrawerView,
-  setOpenDrawerFully,
-} from "../store/uiSlice";
+import { setDrawerHeightValue, setDrawerView } from "../store/uiSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function MapView({
@@ -22,6 +18,7 @@ export default function MapView({
   toggleDrawer,
   currentPathRoutesRef,
   drawerHeightValObj,
+  setExpandDrawer,
 }) {
   //usesate
   const [isGpsOn, setIsGpsOn] = useState(false);
@@ -56,7 +53,7 @@ export default function MapView({
   //toggle methods
   //toggles drawer minizing and maximizing
   const toggleDrawerVisibility = (isOpen) => () => {
-    dispatch(setOpenDrawerFully(isOpen));
+    setExpandDrawer(isOpen);
   };
   const toggleGps = () => {
     setIsGpsOn((prev) => {

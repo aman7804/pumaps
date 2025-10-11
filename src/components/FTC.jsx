@@ -11,6 +11,8 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked"; // circle for A
 import RoomIcon from "@mui/icons-material/Room"; // location pin for B
 import MoreVertIcon from "@mui/icons-material/MoreVert"; // 3 vertical dots
+import { setShowFTC } from "../store/uiSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 function FTC() {
   const [expanded, setExpanded] = useState(false);
@@ -26,11 +28,8 @@ function FTC() {
   // Focus the correct field after expansion
   useEffect(() => {
     if (expanded) {
-      if (focusedField === "source") {
-        sourceRef.current?.focus();
-      } else if (focusedField === "destination") {
-        destRef.current?.focus();
-      }
+      if (focusedField === "source") sourceRef.current?.focus();
+      else if (focusedField === "destination") destRef.current?.focus();
     }
   }, [expanded, focusedField]);
 
@@ -61,100 +60,141 @@ function FTC() {
         borderRadius: expanded ? 0 : 3,
         overflow: "hidden",
         transition: "all 0.3s ease",
-        zIndex: 2000,
+        zIndex: expanded ? 3000 : 2000,
       }}
     >
+      {/* Floating Close Button (instead of header) */}
+      {expanded && (
+        <IconButton
+          onClick={() => setExpanded(false)}
+          sx={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            bgcolor: "white",
+            boxShadow: 2,
+            width: 36,
+            height: 36,
+            "&:hover": { bgcolor: "#f5f5f5" },
+            zIndex: 20,
+          }}
+        >
+          <img
+            src="assets/close.svg"
+            alt="Close"
+            style={{ width: 18, height: 18 }}
+          />
+        </IconButton>
+      )}
+
+      {/* Input Section */}
       <Box
         sx={{
           display: "flex",
-          alignItems: "flex-start",
+          justifyContent: "center", // centers everything horizontally
+          alignItems: "center",
           position: "relative",
           p: 2,
         }}
       >
-        {/* Left icons column */}
         <Box
           sx={{
             display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            mr: 2,
+            flexDirection: "row",
+            alignItems: "flex-start",
+            justifyContent: "center",
+            gap: 2,
+            width: "100%",
+            maxWidth: 400,
           }}
         >
-          <RadioButtonUncheckedIcon fontSize="small" color="primary" />
-          <MoreVertIcon sx={{ my: 0.5, fontSize: "1rem" }} />
-          <RoomIcon fontSize="small" color="error" />
+          {/* Left icons column */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              pt: 0.5,
+            }}
+          >
+            <RadioButtonUncheckedIcon fontSize="small" color="primary" />
+            <MoreVertIcon sx={{ my: 0.5, fontSize: "1rem" }} />
+            <RoomIcon fontSize="small" color="error" />
+          </Box>
+
+          {/* Location inputs */}
+          <Box sx={{ flex: 1, position: "relative" }}>
+            {expanded ? (
+              <TextField
+                inputRef={sourceRef}
+                variant="standard"
+                fullWidth
+                placeholder="Location A"
+                value={locations.source}
+                onChange={(e) =>
+                  setLocations((prev) => ({
+                    ...prev,
+                    source: e.target.value,
+                  }))
+                }
+                sx={{ mb: 1 }}
+              />
+            ) : (
+              <Typography
+                variant="body1"
+                sx={{ fontWeight: 600, cursor: "pointer" }}
+                onClick={() => expandAndFocus("source")}
+              >
+                {locations.source || "Location A"}
+              </Typography>
+            )}
+
+            <Divider sx={{ my: 1 }} />
+
+            {expanded ? (
+              <TextField
+                inputRef={destRef}
+                variant="standard"
+                fullWidth
+                placeholder="Location B"
+                value={locations.destination}
+                onChange={(e) =>
+                  setLocations((prev) => ({
+                    ...prev,
+                    destination: e.target.value,
+                  }))
+                }
+              />
+            ) : (
+              <Typography
+                variant="body1"
+                sx={{ fontWeight: 600, cursor: "pointer" }}
+                onClick={() => expandAndFocus("destination")}
+              >
+                {locations.destination || "Location B"}
+              </Typography>
+            )}
+          </Box>
+
+          {/* Swap button */}
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSwap();
+            }}
+            sx={{
+              alignSelf: "center",
+              bgcolor: "white",
+              boxShadow: 2,
+              ml: 1,
+              "&:hover": { bgcolor: "#f9f9f9" },
+            }}
+          >
+            <SwapVertIcon />
+          </IconButton>
         </Box>
-
-        {/* Location inputs */}
-        <Box flex={1}>
-          {expanded ? (
-            <TextField
-              inputRef={sourceRef}
-              variant="standard"
-              fullWidth
-              placeholder="Location A"
-              value={locations.source}
-              onChange={(e) =>
-                setLocations((prev) => ({ ...prev, source: e.target.value }))
-              }
-              sx={{ mb: 1 }}
-            />
-          ) : (
-            <Typography
-              variant="body1"
-              sx={{ fontWeight: 600, cursor: "pointer" }}
-              onClick={() => expandAndFocus("source")}
-            >
-              {locations.source || "Location A"}
-            </Typography>
-          )}
-
-          <Divider sx={{ my: 1 }} />
-
-          {expanded ? (
-            <TextField
-              inputRef={destRef}
-              variant="standard"
-              fullWidth
-              placeholder="Location B"
-              value={locations.destination}
-              onChange={(e) =>
-                setLocations((prev) => ({
-                  ...prev,
-                  destination: e.target.value,
-                }))
-              }
-            />
-          ) : (
-            <Typography
-              variant="body1"
-              sx={{ fontWeight: 600, cursor: "pointer" }}
-              onClick={() => expandAndFocus("destination")}
-            >
-              {locations.destination || "Location B"}
-            </Typography>
-          )}
-        </Box>
-
-        {/* Swap button */}
-        <IconButton
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleSwap();
-          }}
-          sx={{
-            position: "absolute",
-            right: 8,
-            top: "50%",
-            transform: "translateY(-50%)",
-            bgcolor: "white",
-            boxShadow: 2,
-          }}
-        >
-          <SwapVertIcon />
-        </IconButton>
       </Box>
 
       {/* Expanded Search Results */}
@@ -163,13 +203,6 @@ function FTC() {
           <Typography variant="body2" color="text.secondary">
             🔍 Search results will appear here...
           </Typography>
-
-          <Box
-            sx={{ mt: 2, textAlign: "right", cursor: "pointer" }}
-            onClick={() => setExpanded(false)}
-          >
-            <Typography color="primary">Close</Typography>
-          </Box>
         </Box>
       )}
     </Paper>

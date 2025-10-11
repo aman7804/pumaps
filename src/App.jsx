@@ -3,9 +3,10 @@ import "./App.css";
 import "leaflet.markercluster";
 import Drawer from "./components/Drawer";
 import Search from "./components/Search";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import FTC from "./components/FTC";
 import MapView from "./components/MapView";
+import { setShowFTC } from "./store/uiSlice";
 
 function App() {
   const mapRef = useRef(null);
@@ -15,6 +16,7 @@ function App() {
   //state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showFullFTC, setShowFullFTC] = useState(false);
+  const [expandDrawer, setExpandDrawer] = useState(false);
 
   //toggle methods
   const toggleFullFTC = (isOpen) => setShowFullFTC(isOpen);
@@ -22,7 +24,6 @@ function App() {
 
   // useSelector
   const showFTC = useSelector((state) => state.ui.showFTC);
-  const openDrawerFully = useSelector((state) => state.ui.openDrawerFully);
 
   // isMobile screen?
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
@@ -37,6 +38,14 @@ function App() {
     maxHeight: 0.5,
     middleHeight: 0.75,
   };
+
+  const drawerView = useSelector((state) => state.ui.drawerView);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    if (drawerView == "ROUTE_INFO") dispatch(setShowFTC(true));
+    else dispatch(setShowFTC(false));
+  }, [drawerView]);
+
   return (
     <>
       <MapView
@@ -45,6 +54,7 @@ function App() {
         toggleDrawer={toggleDrawer}
         currentPathRoutesRef={currentPathRoutesRef}
         drawerHeightValObj={drawerHeightValObj}
+        setExpandDrawer={setExpandDrawer}
       />
       {showFTC ? (
         <FTC showFullFTC={showFullFTC} toggleFullFTC={toggleFullFTC} />
@@ -54,7 +64,7 @@ function App() {
       {isMobile && isDrawerOpen && (
         <Drawer
           mapRef={mapRef}
-          isOpen={openDrawerFully}
+          isOpen={expandDrawer}
           toggleDrawer={toggleDrawer}
           currentPathRoutesRef={currentPathRoutesRef}
           userLocationRef={userLocationRef}

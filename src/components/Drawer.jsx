@@ -70,7 +70,6 @@ export default function Drawer({
 
   const onClickDirection = async () => {
     dispatch(setDrawerView("ROUTE_INFO"));
-    dispatch(setShowFTC(true));
     const routes = await getRoutes(
       userLocationRef.current.getLayers()[0].getLatLng(),
       currentMarkerData.coords
@@ -92,12 +91,10 @@ export default function Drawer({
       onClick={() => {}}
       open={isOpen}
       onDismiss={() => {
-        if (drawerView == "ROUTE_INFO") {
+        if (drawerView == "ROUTE_INFO")
           dispatch(setDrawerView("LOCATION_INFO"));
-          dispatch(setShowFTC(false));
-        } else {
-          dispatch(setDrawerView("CLOSED"));
-        }
+        else dispatch(setDrawerView("CLOSED"));
+
         toggleDrawer(false);
         mapRef.current.removeLayer(currentPathRoutes);
       }}
@@ -163,7 +160,7 @@ export default function Drawer({
         </Box>
       }
       style={{
-        zIndex: 9999,
+        zIndex: 2000,
         position: "absolute",
         bottom: 0,
         left: 0,
