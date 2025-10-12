@@ -12,6 +12,8 @@ function App() {
   const mapRef = useRef(null);
   const userLocationRef = useRef(null);
   const currentPathRoutesRef = useRef(null);
+  const markerClusterRef = useRef(null);
+  markerClusterRef.current = {};
 
   //state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -55,8 +57,13 @@ function App() {
         currentPathRoutesRef={currentPathRoutesRef}
         drawerHeightValObj={drawerHeightValObj}
         setExpandDrawer={setExpandDrawer}
+        markerClusterRef={markerClusterRef}
       />
-      {showFTC ? <FTC userLocationRef={userLocationRef} /> : <Search />}
+      {showFTC ? (
+        <FTC userLocationRef={userLocationRef} />
+      ) : (
+        <Search mapRef={mapRef} markerClusterRef={markerClusterRef} />
+      )}
       {isMobile && isDrawerOpen && (
         <Drawer
           mapRef={mapRef}

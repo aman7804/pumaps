@@ -19,6 +19,7 @@ export default function MapView({
   currentPathRoutesRef,
   drawerHeightValObj,
   setExpandDrawer,
+  markerClusterRef,
 }) {
   //usesate
   const [isGpsOn, setIsGpsOn] = useState(false);
@@ -109,12 +110,12 @@ export default function MapView({
       });
 
       //creating/adding marker to map
-      markerType.forEach(({ coords, icon, name, iconColor }) => {
+      markerType.forEach(({ coords, icon, name, iconColor, type }) => {
         const defaultIconUrl = icon.options.iconUrl;
         const marker = L.marker([coords.lat, coords.lng], {
           icon: createIconForMarker(name, defaultIconUrl),
           iconColor,
-          myData: { coords, defaultIconUrl, name, iconColor },
+          myData: { coords, defaultIconUrl, name, iconColor, type: type },
         }).on("click", (e) => {
           toggleDrawerVisibility(true)();
           if (drawerView === "LOCATION_INFO") {
@@ -153,8 +154,8 @@ export default function MapView({
             createIconForMarker(name, "assets/redLocationIcon.png", true)
           );
         });
-
-        markerCluster.addLayer(marker);
+        marker.addTo(markerCluster);
+        markerClusterRef.current[type] = markerCluster;
       });
 
       map.addLayer(markerCluster);
@@ -197,6 +198,7 @@ export default function MapView({
       setIsGpsOn(false);
     });
 
+    mapRef.current = map;
     addAllMarkers(map);
 
     function updateLocation({ coords }) {
@@ -243,8 +245,6 @@ export default function MapView({
       handleError,
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
     );
-
-    mapRef.current = map;
 
     return () => {
       map.remove();

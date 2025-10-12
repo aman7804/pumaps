@@ -1,5 +1,7 @@
 import L from "leaflet";
 import polyline from "@mapbox/polyline";
+import getIcons from "./getIcons";
+import getMarkerData from "./getMarkerData";
 
 export function createIconForMarker(locName, iconUrl, isActive = false) {
   const scale = isActive ? 1.5 : 1; // enlarge active marker
@@ -28,4 +30,29 @@ export async function getRoutes(from, to) {
   }));
 
   return routes;
+}
+export function toLowerCamelCase(str) {
+  return str
+    .replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match, index) =>
+      index === 0 ? match.toLowerCase() : match.toUpperCase()
+    )
+    .replace(/\s+/g, "");
+}
+const icons = getIcons();
+const markerData = getMarkerData(icons);
+// Dropdown search: only checks type
+export function dropDownSearch(value) {
+  const name = toLowerCamelCase(value);
+  const markers = Object.values(markerData).flat();
+  return markers.filter((m) => m.type === name);
+}
+
+// General search: checks multiple fields
+export function searchMarkers(value) {
+  const markers = Object.values(markerData).flat();
+  const regex = new RegExp(value, "i"); // case-insensitive
+
+  return markers.filter(
+    (m) => regex.test(m.type) || regex.test(m.name) || regex.test(m.description)
+  );
 }

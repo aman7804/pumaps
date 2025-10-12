@@ -37,10 +37,6 @@ function FTC({ userLocationRef }) {
     }
   }, [currentMarkerData]);
 
-  useEffect(() => {
-    console.log("locations: ", locations);
-  }, [locations]);
-
   const sourceRef = useRef(null);
   const destRef = useRef(null);
 
