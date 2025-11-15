@@ -5,6 +5,8 @@ import LocationInfo from "./LocationInfo";
 import RouteInfo from "./RouteInfo";
 import { useDispatch, useSelector } from "react-redux";
 import { Typography, Box } from "@mui/material";
+import L from "leaflet";
+import polyline from "@mapbox/polyline";
 import {
   // setChangeDrawerHeight,
   setDrawerHeightValue,
@@ -12,12 +14,12 @@ import {
   setShowFTC,
 } from "../store/uiSlice";
 import { setCurrentPathRoutes, setCurrentRouteInfo } from "../store/mapSlice";
-import { createIconForMarker, getRoutes } from "../helper";
+import { createIconForMarker } from "../helper";
 
 export default function Drawer({
   mapRef,
   isOpen,
-  toggleDrawer,
+  handleDrawerVisibility,
   currentPathRoutesRef,
   userLocationRef,
   drawerHeightValObj,
@@ -35,22 +37,37 @@ export default function Drawer({
 
   const dispatch = useDispatch();
 
+  // change drawer height onChange draweHeightValue
   useEffect(() => {
     if (drawerHeightValue)
       sheetRef.current?.snapTo(drawerHeightValue * maxHeightRef.current);
   }, [drawerHeightValue]);
 
+  async function getRoutes(from, to) {
+    const response = await fetch(
+      `https://graphhopper.com/api/1/route?point=${from.lat},${from.lng}&point=${to.lat},${to.lng}&vehicle=foot&alternative_route.max_paths=3&key=dc0eb692-08c1-4cae-bfa1-661c6e458bac`
+    );
+    const data = await response.json();
+    const routes = data.paths.map((path) => ({
+      distance: path.distance,
+      time: path.time,
+      points: polyline.decode(path.points),
+    }));
+
+    return routes;
+  }
+
   const handleDrawerClose = () => {
     if (drawerView == "ROUTE_INFO") {
       dispatch(setDrawerView("LOCATION_INFO"));
       dispatch(setShowFTC(false));
-      // changeDrawerHeight(drawerHeightValObj.maxHeight);
+
       if (drawerHeightValue !== drawerHeightValObj.maxHeight)
         dispatch(setDrawerHeightValue(drawerHeightValObj.maxHeight));
       if (currentPathRoutes) mapRef.current.removeLayer(currentPathRoutes);
     } else {
       dispatch(setDrawerView("CLOSED"));
-      toggleDrawer(false);
+      handleDrawerVisibility(false);
       if (currentMarker && currentMarkerData?.icon) {
         currentMarker
           .setIcon(
@@ -73,6 +90,7 @@ export default function Drawer({
     const routeLayer = L.polyline(routes[0].points, {
       color: "blue",
     }).addTo(mapRef.current);
+
     if (currentPathRoutesRef.current) {
       mapRef.current.removeLayer(currentPathRoutesRef.current);
     }
@@ -91,7 +109,7 @@ export default function Drawer({
           dispatch(setDrawerView("LOCATION_INFO"));
         else dispatch(setDrawerView("CLOSED"));
 
-        toggleDrawer(false);
+        handleDrawerVisibility(false);
         mapRef.current.removeLayer(currentPathRoutes);
       }}
       snapPoints={({ maxHeight }) => {
@@ -142,7 +160,7 @@ export default function Drawer({
                 : currentMarkerData?.name || ""}
             </Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {(drawerView == "LOCATION_INFO" && currentMarkerData?.type) || ""}
+              {drawerView == "LOCATION_INFO" && currentMarkerData?.type}
             </Typography>
           </Box>
 

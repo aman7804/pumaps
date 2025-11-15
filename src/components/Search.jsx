@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { TextField, IconButton, MenuItem } from "@mui/material";
+import { TextField, IconButton, MenuItem, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import { searchMarkers, dropDownSearch, toLowerCamelCase } from "../helper";
+import CloseIcon from "@mui/icons-material/Close"; // ← new
+import { toLowerCamelCase } from "../helper";
 
 const locationTypes = [
   "Food Place",
@@ -24,14 +25,39 @@ const locationTypes = [
   "Sports",
 ];
 
-export default function SearchToggle({ mapRef, markerClusterRef }) {
+export default function SearchToggle({
+  mapRef,
+  markerClusterRef,
+  handleResultClick,
+  expanded,
+  setExpanded,
+}) {
   const [isSearchMode, setIsSearchMode] = useState(true);
   const [searchVal, setSearchVal] = useState("");
   const [dropDownVal, setDropDownVal] = useState("");
-  const [expanded, setExpanded] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
 
-  // Dropdown filter effect
+  function searchMarkers(value) {
+    const markers = Object.values(markerData).flat();
+    const regex = new RegExp(value, "i"); // case-insensitive
+
+    return markers.filter(
+      (m) =>
+        regex.test(m.type) || regex.test(m.name) || regex.test(m.description)
+    );
+  }
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") {
+        setExpanded(false);
+        document.activeElement.blur();
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
+
   useEffect(() => {
     if (!mapRef.current) return;
     const allGroups = markerClusterRef.current;
@@ -51,22 +77,23 @@ export default function SearchToggle({ mapRef, markerClusterRef }) {
     }
   }, [dropDownVal]);
 
-  // Update search results whenever searchVal changes
   useEffect(() => {
-    if (searchVal.trim() === "") {
-      setSearchResults([]);
-      return;
-    }
-    setSearchResults(searchMarkers(searchVal));
+    if (searchVal.trim()) setSearchResults(searchMarkers(searchVal));
+    else setSearchResults([]);
   }, [searchVal]);
 
   const toggleMode = () => {
     setIsSearchMode((prev) => {
-      const newMode = !prev;
       if (prev) setSearchVal("");
       else setDropDownVal("");
-      return newMode;
+      return !prev;
     });
+  };
+
+  // --- New clear/close function
+  const handleClear = () => {
+    if (searchVal) setSearchVal("");
+    else setExpanded(false);
   };
 
   return (
@@ -86,26 +113,19 @@ export default function SearchToggle({ mapRef, markerClusterRef }) {
         backgroundColor: expanded
           ? "rgba(255, 255, 255, 0.6)"
           : "rgba(255, 255, 255, 0.2)",
-        padding: "10px",
+        padding: 10,
         boxShadow: expanded ? "0 2px 8px rgba(0,0,0,0.2)" : "none",
-        boxSizing: "border-box",
+        fontFamily: "Roboto, sans-serif",
       }}
     >
-      {/* Input Row */}
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          width: "100%",
-          flexWrap: "nowrap",
-        }}
+        style={{ display: "flex", alignItems: "center", gap: 6, width: "100%" }}
       >
         <IconButton
           onClick={toggleMode}
           style={{
             border: "1px solid #ccc",
-            borderRadius: "8px",
+            borderRadius: 8,
             backgroundColor: "#fff",
             flexShrink: 0,
           }}
@@ -117,17 +137,28 @@ export default function SearchToggle({ mapRef, markerClusterRef }) {
           {isSearchMode ? (
             <TextField
               fullWidth
+              autoComplete="off"
               variant="filled"
               hiddenLabel
               placeholder="Search..."
               value={searchVal}
               onFocus={() => setExpanded(true)}
               onChange={(e) => setSearchVal(e.target.value)}
-              InputProps={{ disableUnderline: true }}
+              InputProps={{
+                disableUnderline: true,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={handleClear}>
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
           ) : (
             <TextField
               select
+              autoComplete="off"
               fullWidth
               variant="filled"
               hiddenLabel
@@ -140,7 +171,7 @@ export default function SearchToggle({ mapRef, markerClusterRef }) {
               }}
             >
               <MenuItem value="">
-                <span style={{ opacity: 0.5 }}>Drop-down</span>
+                <span style={{ opacity: 0.5 }}>Select category</span>
               </MenuItem>
               {locationTypes.map((lt) => (
                 <MenuItem key={lt} value={lt}>
@@ -150,64 +181,39 @@ export default function SearchToggle({ mapRef, markerClusterRef }) {
             </TextField>
           )}
         </div>
-
-        {expanded && (
-          <IconButton
-            onClick={() => setExpanded(false)}
-            style={{
-              backgroundColor: "white",
-              boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-              width: 32,
-              height: 32,
-              flexShrink: 0,
-            }}
-          >
-            <img
-              src="assets/close.svg"
-              alt="Close"
-              style={{ width: 16, height: 16 }}
-            />
-          </IconButton>
-        )}
       </div>
 
-      {/* Expanded content: search results */}
-      {expanded && isSearchMode && searchResults.length > 0 && (
+      {expanded && isSearchMode && (
         <div
           style={{
-            marginTop: "10px",
-            maxHeight: "300px",
+            marginTop: 10,
+            maxHeight: 600,
             overflowY: "auto",
             background: "rgba(255,255,255,0.8)",
             borderRadius: 8,
-            padding: "8px",
+            padding: 8,
           }}
         >
-          {searchResults.map((marker, index) => (
-            <div
-              key={index}
-              style={{
-                padding: "6px 8px",
-                borderBottom: "1px solid #ccc",
-                cursor: "pointer",
-              }}
-              onClick={() => {
-                mapRef.current.setView(
-                  [marker.coords.lat, marker.coords.lng],
-                  18
-                );
-              }}
-            >
-              <strong>{marker.name}</strong>
-              <p style={{ margin: 0, fontSize: "0.8rem" }}>{marker.type}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {expanded && isSearchMode && searchResults.length === 0 && searchVal && (
-        <div style={{ marginTop: "10px", fontSize: "0.85rem", color: "#666" }}>
-          No results found.
+          {searchResults.length > 0 ? (
+            searchResults.map((marker, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: "6px 8px",
+                  borderBottom: "1px solid #ccc",
+                  cursor: "pointer",
+                }}
+                onClick={() => handleResultClick(marker)}
+              >
+                <strong>{marker.name}</strong>
+                <p style={{ margin: 0, fontSize: "0.8rem" }}>{marker.type}</p>
+              </div>
+            ))
+          ) : searchVal ? (
+            <p style={{ margin: 0, color: "#666", fontSize: "0.85rem" }}>
+              No results found.
+            </p>
+          ) : null}
         </div>
       )}
     </div>

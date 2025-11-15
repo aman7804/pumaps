@@ -1,8 +1,7 @@
-import L from "leaflet";
-import polyline from "@mapbox/polyline";
 import getIcons from "./getIcons";
 import getMarkerData from "./getMarkerData";
 
+//creates and returns marker(icon + location name)
 export function createIconForMarker(locName, iconUrl, isActive = false) {
   const scale = isActive ? 1.5 : 1; // enlarge active marker
 
@@ -18,19 +17,6 @@ export function createIconForMarker(locName, iconUrl, isActive = false) {
   });
 }
 
-export async function getRoutes(from, to) {
-  const response = await fetch(
-    `https://graphhopper.com/api/1/route?point=${from.lat},${from.lng}&point=${to.lat},${to.lng}&vehicle=foot&alternative_route.max_paths=3&key=dc0eb692-08c1-4cae-bfa1-661c6e458bac`
-  );
-  const data = await response.json();
-  const routes = data.paths.map((path) => ({
-    distance: path.distance,
-    time: path.time,
-    points: polyline.decode(path.points),
-  }));
-
-  return routes;
-}
 export function toLowerCamelCase(str) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match, index) =>
@@ -40,6 +26,7 @@ export function toLowerCamelCase(str) {
 }
 const icons = getIcons();
 const markerData = getMarkerData(icons);
+
 // Dropdown search: only checks type
 export function dropDownSearch(value) {
   const name = toLowerCamelCase(value);
@@ -48,11 +35,18 @@ export function dropDownSearch(value) {
 }
 
 // General search: checks multiple fields
-export function searchMarkers(value) {
-  const markers = Object.values(markerData).flat();
-  const regex = new RegExp(value, "i"); // case-insensitive
+export function changeMarkerIconOnClick(marker, map) {
+  if (!marker || !map?.eachLayer) return;
 
-  return markers.filter(
-    (m) => regex.test(m.type) || regex.test(m.name) || regex.test(m.description)
-  );
+  // Reset all markers
+  map.eachLayer((layer) => {
+    if (layer.options?.myData) {
+      const { name, defaultIconUrl } = layer.options.myData;
+      layer.setIcon(createIconForMarker(name, defaultIconUrl));
+    }
+  });
+
+  // Highlight clicked marker
+  const { name } = marker.options.myData;
+  marker.setIcon(createIconForMarker(name, "assets/redLocationIcon.png", true));
 }

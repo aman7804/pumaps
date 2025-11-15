@@ -1,13 +1,13 @@
 import L from "leaflet";
 import "leaflet.markercluster/dist/leaflet.markercluster"; // explicit path
 
-import { Drawer, Fab } from "@mui/material";
+import { Fab } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import GPS from "./GPS";
 import ZoomControls from "./ZoomControls";
 import getMarkerData from "../getMarkerData";
 import getIcons from "../getIcons";
-import { createIconForMarker } from "../helper";
+import { changeMarkerIconOnClick, createIconForMarker } from "../helper";
 import { setCurrentMarker, setCurrentMarkerData } from "../store/mapSlice";
 import { setDrawerHeightValue, setDrawerView } from "../store/uiSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,10 +15,9 @@ import { useDispatch, useSelector } from "react-redux";
 export default function MapView({
   mapRef,
   userLocationRef,
-  toggleDrawer,
-  currentPathRoutesRef,
+  handleDrawerVisibility,
   drawerHeightValObj,
-  setExpandDrawer,
+  handleExpandDrawer,
   markerClusterRef,
 }) {
   //usesate
@@ -26,9 +25,9 @@ export default function MapView({
 
   //useSelector
   const drawerView = useSelector((state) => state.ui.drawerView);
-  const prevDrawerView = useSelector((state) => state.ui.prevDrawerView);
   const currentMarker = useSelector((state) => state.map.currentMarker);
   const drawerHeightValue = useSelector((state) => state.ui.drawerHeightValue);
+  const currentPathRoutes = useSelector((state) => state.map.currentPathRoutes);
   //refs
   const isGpsOnRef = useRef(isGpsOn);
   const icons = useRef(getIcons()).current;
@@ -37,25 +36,13 @@ export default function MapView({
   const userMovedRef = useRef(true);
   const watchIdRef = useRef(null);
   const currentMarkerRef = useRef(null);
+  const currentPathRouteRef = useRef(null);
 
   currentMarkerRef.current = currentMarker;
 
   const dispatch = useDispatch();
 
-  //setcurrentmarker data
-  const getCurrentMarkerData = (markerSmallData) => {
-    const [markerFullData] = Object.values(markerData)
-      .flat()
-      .filter((m) => m.name === markerSmallData.name);
-
-    dispatch(setCurrentMarkerData(markerFullData));
-  };
-
-  //toggle methods
   //toggles drawer minizing and maximizing
-  const toggleDrawerVisibility = (isOpen) => () => {
-    setExpandDrawer(isOpen);
-  };
   const toggleGps = () => {
     setIsGpsOn((prev) => {
       if (!prev) {
@@ -65,7 +52,76 @@ export default function MapView({
       return !prev;
     });
   };
+  function panMarkerWithOffset(markerLatLng, offsetX = 0, offsetY = -100) {
+    // markerLatLng = L.latLng(lat, lng)
+    // offsetX, offsetY = pixels (negative Y moves marker up)
 
+    const map = mapRef.current;
+    const targetPoint = map.latLngToContainerPoint(markerLatLng); // convert to screen point
+    const offsetPoint = L.point(
+      targetPoint.x + offsetX,
+      targetPoint.y + offsetY
+    );
+    const targetLatLng = map.containerPointToLatLng(offsetPoint); // convert back to LatLng
+    map.flyTo(targetLatLng, map.getZoom(), { duration: 0.5 });
+  }
+
+  useEffect(() => {
+    currentPathRouteRef.current = currentPathRoutes;
+  }, [currentPathRoutes]);
+  function onMarkerClick(e, marker, map) {
+    if (currentPathRouteRef.current)
+      mapRef.current.removeLayer(currentPathRouteRef.current);
+    if (drawerView === "LOCATION_INFO") {
+      if (drawerHeightValue !== drawerHeightValObj.minHeight)
+        dispatch(setDrawerHeightValue(drawerHeightValObj.minHeight)); // LOCATION_INFO should open at max height
+    } else {
+      if (drawerHeightValue !== drawerHeightValObj.maxHeight)
+        dispatch(setDrawerHeightValue(drawerHeightValObj.maxHeight)); // default or keep same
+    }
+
+    dispatch(
+      setDrawerView(
+        drawerView === "LOCATION_INFO" ? "ROUTE_INFO" : "LOCATION_INFO"
+      )
+    );
+
+    panMarkerWithOffset(marker.getLatLng(), 0, 63);
+    handleExpandDrawer(true);
+    handleDrawerVisibility(true);
+    changeMarkerIconOnClick(marker, map);
+    dispatch(setCurrentMarker(marker));
+
+    //setCurrentMarkerData
+    const [markerFullData] = Object.values(markerData)
+      .flat()
+      .filter((m) => m.name === e.target.options.myData.name);
+    dispatch(setCurrentMarkerData(markerFullData));
+  }
+  //create cluster icon
+  function createClusterIcon(cluster) {
+    const children = cluster.getAllChildMarkers();
+    const color = children[0]?.options.iconColor || "#000";
+    return L.divIcon({
+      html: `
+      <div style="
+        width: 20px;
+        height: 20px;
+        background-color: ${color};
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 16px;
+      ">
+        ${cluster.getChildCount()}
+      </div>
+    `,
+      className: "",
+      iconSize: L.point(20, 20),
+    });
+  }
   function addAllMarkers(map) {
     Object.values(markerData).forEach((markerType) => {
       // markerCluster logic
@@ -82,31 +138,8 @@ export default function MapView({
           };
           return sizes[zoom] || 10;
         },
-        disableClusteringAtZoom: 25,
-        iconCreateFunction: (cluster) => {
-          const children = cluster.getAllChildMarkers();
-          const color = children[0]?.options.iconColor || "#000";
-
-          return L.divIcon({
-            html: `
-              <div style="
-                width: 20px;
-                height: 20px;
-                background-color: ${color};
-                border-radius: 50%;
-                color: white;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-size: 16px;
-              ">
-                ${cluster.getChildCount()}
-              </div>
-            `,
-            className: "",
-            iconSize: L.point(25, 25),
-          });
-        },
+        disableClusteringAtZoom: 23,
+        iconCreateFunction: (cluster) => createClusterIcon(cluster),
       });
 
       //creating/adding marker to map
@@ -116,51 +149,15 @@ export default function MapView({
           icon: createIconForMarker(name, defaultIconUrl),
           iconColor,
           myData: { coords, defaultIconUrl, name, iconColor, type: type },
-        }).on("click", (e) => {
-          toggleDrawerVisibility(true)();
-          if (drawerView === "LOCATION_INFO") {
-            if (drawerHeightValue !== drawerHeightValObj.minHeight)
-              dispatch(setDrawerHeightValue(drawerHeightValObj.minHeight)); // LOCATION_INFO should open at max height
-          } else {
-            if (drawerHeightValue !== drawerHeightValObj.maxHeight)
-              dispatch(setDrawerHeightValue(drawerHeightValObj.maxHeight)); // default or keep same
-          }
-
-          dispatch(
-            setDrawerView(
-              drawerView === "LOCATION_INFO" ? "ROUTE_INFO" : "LOCATION_INFO"
-            )
-          );
-          toggleDrawer(true);
-
-          getCurrentMarkerData(e.target.options.myData);
-
-          const prevMarker = currentMarkerRef.current;
-          if (prevMarker && prevMarker !== marker) {
-            const { name, defaultIconUrl } = prevMarker.options.myData;
-            prevMarker.setIcon(createIconForMarker(name, defaultIconUrl));
-
-            if (currentPathRoutesRef.current)
-              map.removeLayer(currentPathRoutesRef.current);
-
-            // if (prevDrawerView === "ROUTE_INFO" && drawerView==) {
-            //   changeDrawerHeight(drawerHeightValObj.maxHeight);
-            // }
-          }
-
-          dispatch(setCurrentMarker(marker));
-
-          marker.setIcon(
-            createIconForMarker(name, "assets/redLocationIcon.png", true)
-          );
-        });
+        }).on("click", (e) => onMarkerClick(e, marker, map));
         marker.addTo(markerCluster);
-        markerClusterRef.current[type] = markerCluster;
       });
-
+      const type = markerType[0].type;
+      markerClusterRef.current[type] = markerCluster;
       map.addLayer(markerCluster);
     });
   }
+  // center to user location on GpsOn
   useEffect(() => {
     isGpsOnRef.current = isGpsOn;
     if (isGpsOn) {
@@ -168,8 +165,9 @@ export default function MapView({
     }
   }, [isGpsOn]);
 
-  // map core start
+  // map core
   useEffect(() => {
+    // map creation
     const map = L.map("map", {
       maxBounds: [
         [22.28402, 73.35657],
@@ -186,9 +184,12 @@ export default function MapView({
       }
     ).addTo(map);
 
-    map.zoomControl.remove();
-    // L.control.zoom({ position: "bottomright" }).addTo(map);
+    mapRef.current = map; // for using map object in other components
+    map.zoomControl.remove(); // remove default zoom control
 
+    addAllMarkers(map);
+
+    // turn off centering user when user moves
     map.on("zoomstart", () => {
       userMovedRef.current = true;
       setIsGpsOn(false);
@@ -197,9 +198,6 @@ export default function MapView({
       userMovedRef.current = true;
       setIsGpsOn(false);
     });
-
-    mapRef.current = map;
-    addAllMarkers(map);
 
     function updateLocation({ coords }) {
       const { latitude: lat, longitude: lng, accuracy } = coords;
@@ -251,6 +249,7 @@ export default function MapView({
       navigator.geolocation.clearWatch(watchIdRef.current);
     };
   }, []);
+
   return (
     <>
       <div id="map" style={{ height: "100vh" }}></div>

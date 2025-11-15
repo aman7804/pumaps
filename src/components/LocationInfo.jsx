@@ -26,7 +26,6 @@ export default function LocationInfo({
     const mid = Math.ceil(infoEntries.length / 2);
     const firstCol = infoEntries.slice(0, mid);
     const secondCol = infoEntries.slice(mid);
-
     return (
       <>
         <Stack spacing={0.5}>
@@ -46,6 +45,12 @@ export default function LocationInfo({
       </>
     );
   };
+
+  // console.log("currentMarkerData", currentMarkerData);
+  // useEffect(() => {
+  //   console.log("currentMarkerData", currentMarkerData);
+  //   console.log("currentMarkerData.type", currentMarkerData.type);
+  // }, [isOpen, currentMarkerData]);
   return (
     <>
       {currentMarkerData && (
